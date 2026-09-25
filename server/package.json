@@ -1,0 +1,16 @@
+{
+  "name": "alpaca-broker-proxy",
+  "version": "1.0.0",
+  "description": "Minimal Express backend that exchanges your Alpaca Broker API client_id/client_secret for an OAuth2 access token and proxies account/trading calls, so the secret never touches the browser.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
