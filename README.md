@@ -2,9 +2,9 @@
 
 A dummy brokerage app wired to Alpaca's real sandbox Broker API.
 
-- `client/index.html` — the frontend (login, account creation, funding, trade
-  ticket, positions, order history, notifications). Plain HTML/CSS/JS, no
-  build step, no browser storage of secrets.
+- `client/index.html` — plain HTML/CSS/JS frontend, no build step.
+- `client-react/` — the same UI as a Vite + React app, if you'd rather work
+  in components. See `client-react/README.md`.
 - `server/` — an Express proxy that holds your `client_id`/`client_secret`,
   exchanges them for a short-lived OAuth2 token, and forwards requests to
   Alpaca's sandbox Broker API. See `server/README.md` for endpoint details.

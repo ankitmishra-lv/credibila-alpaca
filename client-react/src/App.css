@@ -1,0 +1,87 @@
+:root{
+  --bg:#0b0e13; --panel:#12161d; --panel2:#161b23; --text:#f2f4f7; --muted:#8b93a1; --border:#232833;
+  --up:#22c55e; --down:#ef4444; --accent:#3b82f6; --chip:#1c212b; --buyBg:#8fe3b0; --buyFg:#06210f;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="light"]{ --bg:#f5f6f8; --panel:#ffffff; --panel2:#fafbfc; --text:#14181f; --muted:#6b7280; --border:#e5e7eb; --chip:#eef1f5; }
+html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%;}
+*{box-sizing:border-box;}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.hidden{display:none !important;}
+/* ---- auth screens ---- */
+.authwrap{max-width:380px;margin:0 auto;padding:40px 16px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.card + .card{margin-top:14px;}
+h1{font-size:19px;margin:0 0 4px;}
+p.sub{color:var(--muted);font-size:13px;margin:0 0 16px;}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;}
+input,select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+button{cursor:pointer;border:none;border-radius:9px;padding:11px 16px;font-size:14px;font-weight:600;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;width:100%;margin-top:16px;}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;margin-bottom:22px;}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:#fcd72b;}
+/* ---- dashboard ---- */
+#dash{display:none;flex-direction:column;height:100%;}
+#dash.active{display:flex;}
+.topbar{display:flex;align-items:center;gap:34px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap;}
+.topbar .name{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;}
+.pill-paper{background:#fcd72b;color:#3a2e00;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.03em;}
+.stat-blk{}
+.stat-blk .l{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+.stat-blk .v{font-size:17px;font-weight:700;margin-top:2px;}
+.up{color:var(--up);} .down{color:var(--down);}
+.topbar .spacer{flex:1;}
+.market-status{font-size:12px;color:var(--muted);background:var(--chip);padding:5px 10px;border-radius:7px;}
+.body{display:flex;flex:1;gap:14px;padding:16px;overflow:auto;}
+.col-watch{width:210px;flex:none;}
+.col-main{flex:1;min-width:0;}
+.col-ticket{width:250px;flex:none;}
+@media (max-width:900px){ .body{flex-direction:column;} .col-watch,.col-ticket{width:100%;} }
+h2{font-size:11px;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.addrow{display:flex;gap:6px;margin-bottom:10px;}
+.addrow input{flex:1;}
+.addrow button{background:var(--chip);color:var(--text);padding:9px 12px;}
+.wl-item{padding:10px 10px;border-radius:9px;cursor:pointer;margin-bottom:6px;border:1px solid transparent;}
+.wl-item.active{border-color:var(--accent);background:var(--chip);}
+.wl-item .sym{font-weight:700;font-size:14px;}
+.wl-item .px{font-size:13px;margin-top:2px;}
+.wl-item .chg{font-size:12px;}
+.ticker-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:2px;}
+.ticker-hd .sym{font-size:26px;font-weight:800;}
+.ticker-hd .px{font-size:22px;font-weight:700;}
+.ticker-hd .chg{font-size:14px;font-weight:600;}
+.bidask{color:var(--muted);font-size:12px;margin-bottom:10px;}
+.chartbox{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.chart-note{color:var(--muted);font-size:11px;margin-top:6px;}
+.tablecard{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.subtabs{display:flex;gap:4px;margin-bottom:12px;background:var(--chip);border-radius:9px;padding:3px;width:fit-content;}
+.subtab{padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;}
+.subtab.active{background:var(--panel2);color:var(--text);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;color:var(--muted);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;}
+td{padding:9px 4px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+.linklike{color:var(--accent);font-weight:700;}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
+.overflow{overflow-x:auto;}
+.tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:var(--chip);}
+.closebtn{background:var(--chip);color:var(--text);padding:6px 10px;font-size:11px;}
+/* order ticket */
+.sidewrap{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.side-toggle{display:flex;background:var(--chip);border-radius:9px;padding:3px;margin-bottom:12px;}
+.side-toggle div{flex:1;text-align:center;padding:9px;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted);}
+.side-toggle .buy.active{background:var(--buyBg);color:var(--buyFg);}
+.side-toggle .sell.active{background:#f5b3b0;color:#3a0505;}
+.unit-toggle{display:flex;background:var(--chip);border-radius:9px;padding:3px;margin-top:4px;}
+.unit-toggle div{flex:1;text-align:center;padding:6px;border-radius:6px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;}
+.unit-toggle div.active{background:var(--accent);color:#fff;}
+.reftbl{margin-top:12px;font-size:13px;}
+.reftbl .r{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);}
+.reviewbtn{width:100%;background:var(--buyBg);color:var(--buyFg);margin-top:12px;padding:13px;font-weight:800;}
+.reviewbtn.sell{background:#f5b3b0;color:#3a0505;}
+.note{color:var(--muted);font-size:11px;margin-top:10px;line-height:1.4;}
+.noposline{color:var(--muted);font-size:12px;margin-top:8px;}
+.bell{position:relative;background:var(--chip);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:14px;}
+.badge{position:absolute;top:-6px;right:-6px;background:var(--down);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;min-width:14px;text-align:center;}
+.logout{color:var(--muted);font-size:11px;cursor:pointer;}
