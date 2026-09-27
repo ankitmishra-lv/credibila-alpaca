@@ -61,7 +61,8 @@ export default function App(){
   useEffect(() => { if (screen==='dashboard') refreshFromBackend(); }, [screen]); // eslint-disable-line
 
   if (screen === 'login') return <LoginView apiBase={apiBase} setApiBase={setApiBase} onSuccess={()=>setScreen('create')} notify={notify} />;
-  if (screen === 'create') return <CreateAccountView apiBase={apiBase} onCreated={(acct)=>{ setAccount(acct); notify('🏦','Account created', `#${acct.account_number} · status ${acct.status}`); setScreen('fund'); }} />;
+  if (screen === 'create') return <CreateAccountView apiBase={apiBase} onCreated={(acct)=>{ setAccount(acct); notify('🏦','Account created', `#${acct.account_number} · status ${acct.status}`); setScreen('fund'); }} onUseExisting={()=>setScreen('existing')} />;
+  if (screen === 'existing') return <UseExistingView apiBase={apiBase} onLoaded={(acct)=>{ setAccount(acct); notify('✅','Loaded existing account', `#${acct.account_number} · status ${acct.status}`); setScreen('dashboard'); }} onBack={()=>setScreen('create')} />;
   if (screen === 'fund') return <FundView apiBase={apiBase} accountId={account.id} onDone={()=>setScreen('dashboard')} notify={notify} />;
 
   return (
@@ -116,7 +117,7 @@ function LoginView({ apiBase, setApiBase, onSuccess, notify }){
   );
 }
 
-function CreateAccountView({ apiBase, onCreated }){
+function CreateAccountView({ apiBase, onCreated, onUseExisting }){
   const [given, setGiven] = useState('John');
   const [family, setFamily] = useState('Doe');
   const [email, setEmail] = useState('jane@example.com');
@@ -128,7 +129,7 @@ function CreateAccountView({ apiBase, onCreated }){
     setBusy(true); setErr('');
     const payload = {
       contact:{ email_address:email, phone_number:'555-666-7788', street_address:['20 N San Mateo Dr'], city:'San Mateo', state:'CA', postal_code:'94401', country:'USA' },
-      identity:{ given_name:given, family_name:family, date_of_birth:dob, tax_id_type:'USA_SSN', tax_id:'666-55-4321', country_of_citizenship:'USA', country_of_birth:'USA', country_of_tax_residence:'USA', funding_source:['employment_income'] },
+      identity:{ given_name:given, family_name:family, date_of_birth:dob, tax_id_type:'USA_SSN', tax_id:'549-32-7861', country_of_citizenship:'USA', country_of_birth:'USA', country_of_tax_residence:'USA', funding_source:['employment_income'] },
       disclosures:{ is_control_person:false, is_affiliated_exchange_or_finra:false, is_politically_exposed:false, immediate_family_exposed:false },
       agreements:[
         { agreement:'margin_agreement', signed_at:new Date().toISOString(), ip_address:'127.0.0.1' },
@@ -157,6 +158,38 @@ function CreateAccountView({ apiBase, onCreated }){
         <label>Date of Birth</label><input type="date" value={dob} onChange={e=>setDob(e.target.value)} />
         <button className="btn-primary" disabled={busy} onClick={submit}>{busy ? 'Submitting…' : 'Submit Application'}</button>
         {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
+        <div className="link" onClick={onUseExisting}>Already have an account? Use its ID →</div>
+      </div>
+    </div>
+  );
+}
+
+function UseExistingView({ apiBase, onLoaded, onBack }){
+  const [id, setId] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    if (!id.trim()) { setErr('Enter an account ID.'); return; }
+    setBusy(true); setErr('');
+    try {
+      const acct = await api(apiBase, `/api/accounts/${id.trim()}`);
+      onLoaded({ id:acct.id, account_number:acct.account_number, status:acct.status, cash:0, given_name:acct.identity?.given_name||'', family_name:acct.identity?.family_name||'' });
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="authwrap">
+      <div className="brand"><span className="dot"></span>Broker Demo</div>
+      <div className="card">
+        <h1>Use Existing Account</h1>
+        <p className="sub">Skip creation and jump straight to the dashboard for an account you already made.</p>
+        <label>Account ID</label>
+        <input value={id} onChange={e=>setId(e.target.value)} placeholder="e.g. 8f8c8cee-2591-4f83-..." />
+        <button className="btn-primary" disabled={busy} onClick={submit}>{busy ? 'Loading…' : 'Load Account'}</button>
+        {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
+        <div className="link" onClick={onBack}>← Back</div>
       </div>
     </div>
   );
@@ -239,6 +272,23 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
   const [addSym, setAddSym] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [seen, setSeen] = useState(0);
+  const [showFund, setShowFund] = useState(false);
+  const [fundFrom, setFundFrom] = useState('');
+  const [fundAmt, setFundAmt] = useState('5000');
+  const [fundErr, setFundErr] = useState('');
+  const [fundBusy, setFundBusy] = useState(false);
+
+  const doFund = async () => {
+    if (!fundFrom.trim()) { setFundErr('Enter a sweep/from-account ID.'); return; }
+    setFundBusy(true); setFundErr('');
+    try {
+      await api(apiBase, '/api/journals', { method:'POST', body:{ to_account:account.id, from_account:fundFrom, entry_type:'JNLC', amount:String(fundAmt) } });
+      notify('💵','Journal submitted', `$${fundAmt} requested from sweep account`);
+      setShowFund(false);
+      await refreshFromBackend();
+    } catch (e) { setFundErr(e.message); }
+    setFundBusy(false);
+  };
 
   const posVal = Object.entries(positions).reduce((s,[sym,p])=> s + (p.qty>0? p.qty*price(sym):0), 0);
   const equity = (account.cash||0) + posVal;
@@ -292,12 +342,24 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
         <div className="stat-blk"><div className="l">Buying Power</div><div className="v">{fmt(account.buying_power ?? account.cash ?? 0)}</div></div>
         <div className="stat-blk"><div className="l">Cash</div><div className="v">{fmt(account.cash||0)}</div></div>
         <div className="spacer"></div>
+        <button className="btn-ghost" style={{padding:'8px 12px', fontSize:12}} onClick={()=>setShowFund(s=>!s)}>+ Fund</button>
         <div className="bell" onClick={()=>{ setSub('notifs'); setSeen(notifications.length); }}>
           🔔{unseenCount>0 && <span className="badge">{unseenCount}</span>}
         </div>
         <div className="market-status">Sandbox</div>
         <div className="logout" onClick={onLogout}>Log out</div>
       </div>
+      {showFund && (
+        <div className="card" style={{position:'absolute', top:56, right:20, width:280, zIndex:10}}>
+          <h2>Fund Account</h2>
+          <label>From Account ID (sweep account)</label>
+          <input value={fundFrom} onChange={e=>setFundFrom(e.target.value)} placeholder="e.g. abc123..." />
+          <label>Amount (USD)</label>
+          <input type="number" value={fundAmt} onChange={e=>setFundAmt(e.target.value)} />
+          <button className="btn-primary" disabled={fundBusy} onClick={doFund}>{fundBusy ? 'Journaling…' : 'Journal Funds'}</button>
+          {fundErr && <div className="sub" style={{color:'#ef4444', marginTop:8}}>{fundErr}</div>}
+        </div>
+      )}
 
       <div className="body">
         <div className="col-watch">
