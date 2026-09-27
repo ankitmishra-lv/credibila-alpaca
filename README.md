@@ -42,3 +42,40 @@ confirm the "Backend URL" field matches where your server is running
   queues instead of filling instantly.
 - Watchlist prices/chart are still simulated client-side; wiring in real
   quotes would need Alpaca's separate Market Data API and its own keys.
+
+## Deploying
+
+### Backend (Render — easiest)
+
+1. Push this repo to GitHub.
+2. On [render.com](https://render.com), New → Blueprint, point it at your
+   repo. It reads `render.yaml` at the root and creates the service
+   automatically (root dir `server/`, build `npm install`, start `npm start`).
+3. Render will prompt for the two secrets marked `sync: false` —
+   `ALPACA_CLIENT_ID` and `ALPACA_CLIENT_SECRET`. Paste your sandbox values.
+4. Once deployed you'll get a URL like `https://alpaca-broker-proxy.onrender.com`.
+   Update `ALLOWED_ORIGIN` in Render's env vars to your frontend's real URL
+   (not `*`) once you know it, so only your frontend can call the proxy.
+
+No Render account? `server/Procfile` works the same way on Railway or
+Heroku-style platforms — same env vars apply.
+
+### Frontend
+
+**Plain HTML (`client/`)** — it's fully static. Drag the `client` folder into
+Netlify's manual-deploy UI, or push it to a `gh-pages` branch for GitHub
+Pages. No build step. Once deployed, open the site and set "Backend URL" on
+the login screen to your Render URL — this is saved in the browser's
+localStorage, no code change needed.
+
+**React (`client-react/`)** — has `vercel.json` and a root-level
+`netlify.toml` already set up:
+- **Vercel**: import the repo, set root directory to `client-react`, it
+  picks up `vercel.json` automatically.
+- **Netlify**: import the repo; `netlify.toml` at the root already points
+  Netlify at `client-react` with the right build/publish paths.
+
+Either way, set an environment variable `VITE_API_BASE` to your deployed
+backend URL (e.g. `https://alpaca-broker-proxy.onrender.com`) so the login
+screen defaults to the right place — still overridable per-visitor on the
+login screen itself.

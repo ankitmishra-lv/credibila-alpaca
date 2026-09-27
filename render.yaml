@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: alpaca-broker-proxy
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ALPACA_CLIENT_ID
+        sync: false
+      - key: ALPACA_CLIENT_SECRET
+        sync: false
+      - key: ALPACA_AUTH_URL
+        value: https://authx.sandbox.alpaca.markets/v1/oauth2/token
+      - key: ALPACA_BROKER_URL
+        value: https://broker-api.sandbox.alpaca.markets
+      - key: ALLOWED_ORIGIN
+        value: "*"

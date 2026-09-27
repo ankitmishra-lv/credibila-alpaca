@@ -13,7 +13,7 @@ function saveLS(s){ try{ localStorage.setItem('brokerReactState', JSON.stringify
 export default function App(){
   const saved = loadLS();
   const [screen, setScreen] = useState(saved?.account ? 'dashboard' : (saved?.loggedIn ? 'create' : 'login'));
-  const [apiBase, setApiBase] = useState(saved?.apiBase || 'http://localhost:4000');
+  const [apiBase, setApiBase] = useState(saved?.apiBase || import.meta.env.VITE_API_BASE || 'http://localhost:4000');
   const [account, setAccount] = useState(saved?.account || null);
   const [notifications, setNotifications] = useState(saved?.notifications || []);
   const [positions, setPositions] = useState({});
