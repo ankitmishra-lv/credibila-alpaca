@@ -12,7 +12,7 @@ function saveLS(s){ try{ localStorage.setItem('brokerReactState', JSON.stringify
 
 export default function App(){
   const saved = loadLS();
-  const [screen, setScreen] = useState(saved?.account ? 'dashboard' : (saved?.loggedIn ? 'fund' : 'home'));
+  const [screen, setScreen] = useState(saved?.account ? 'dashboard' : 'home');
   const [apiBase] = useState(saved?.apiBase || import.meta.env.VITE_API_BASE || 'http://localhost:4000');
   const [account, setAccount] = useState(saved?.account || null);
   const [notifications, setNotifications] = useState(saved?.notifications || []);
@@ -27,7 +27,7 @@ export default function App(){
     setNotifications(n => [{ icon, title, detail, t: new Date().toLocaleString() }, ...n]);
   }, []);
 
-  useEffect(() => { saveLS({ apiBase, account, notifications, watchlist, prices, dayStart, loggedIn: screen!=='login' }); },
+  useEffect(() => { saveLS({ apiBase, account, notifications, watchlist, prices, dayStart, loggedIn: !!account }); },
     [apiBase, account, notifications, watchlist, prices, dayStart, screen]);
 
   const price = sym => {
@@ -68,7 +68,7 @@ export default function App(){
       onAccountLoaded={(acct)=>{ setAccount(acct); notify('✅','Loaded existing account', `#${acct.account_number} · status ${acct.status}`); setScreen('dashboard'); }}
     />
   );
-  if (screen === 'fund') return <FundView apiBase={apiBase} accountId={account.id} onDone={()=>setScreen('dashboard')} notify={notify} />;
+  if (screen === 'fund' && account?.id) return <FundView apiBase={apiBase} accountId={account.id} onDone={()=>setScreen('dashboard')} notify={notify} />;
 
   return (
     <Dashboard
