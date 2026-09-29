@@ -22,6 +22,7 @@ export default function App(){
   const [prices, setPrices] = useState(saved?.prices || {...SEED});
   const [dayStart] = useState(saved?.dayStart || {...SEED});
   const [activeSym, setActiveSym] = useState('AAPL');
+  const prevOrdersRef = useRef({});
 
   const notify = useCallback((icon, title, detail) => {
     setNotifications(n => [{ icon, title, detail, t: new Date().toLocaleString() }, ...n]);
@@ -59,6 +60,23 @@ export default function App(){
   }, [account?.id, apiBase, notify]);
 
   useEffect(() => { if (screen==='dashboard') refreshFromBackend(); }, [screen]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!orders.length) return;
+    orders.forEach(o => {
+      const prev = prevOrdersRef.current[o.orderId];
+      if (prev && prev !== o.status) {
+        notify('🔔', 'Order updated', `${o.symbol} ${o.side.toUpperCase()}: ${prev} → ${o.status}`);
+      }
+      prevOrdersRef.current[o.orderId] = o.status;
+    });
+  }, [orders, notify]);
+
+  useEffect(() => {
+    if (screen !== 'dashboard' || !account?.id) return;
+    const interval = setInterval(() => { refreshFromBackend(); }, 10000);
+    return () => clearInterval(interval);
+  }, [screen, account?.id, refreshFromBackend]);
 
   if (screen === 'home') return (
     <HomeView
