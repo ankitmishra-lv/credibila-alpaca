@@ -23,6 +23,7 @@ export default function App(){
   const [dayStart] = useState(saved?.dayStart || {...SEED});
   const [activeSym, setActiveSym] = useState('AAPL');
   const prevOrdersRef = useRef({});
+  const prevAccountIdRef = useRef(account?.id);
 
   const notify = useCallback((icon, title, detail) => {
     setNotifications(n => [{ icon, title, detail, t: new Date().toLocaleString() }, ...n]);
@@ -62,8 +63,11 @@ export default function App(){
   useEffect(() => { if (screen==='dashboard') refreshFromBackend(); }, [screen]); // eslint-disable-line
 
   useEffect(() => {
-    setNotifications([]);
-    prevOrdersRef.current = {};
+    if (account?.id !== prevAccountIdRef.current) {
+      setNotifications([]);
+      prevOrdersRef.current = {};
+    }
+    prevAccountIdRef.current = account?.id;
   }, [account?.id]);
 
   useEffect(() => {
