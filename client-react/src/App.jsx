@@ -60,8 +60,22 @@ export default function App(){
 
   useEffect(() => { if (screen==='dashboard') refreshFromBackend(); }, [screen]); // eslint-disable-line
 
-  if (screen === 'login') return <LoginView apiBase={apiBase} setApiBase={setApiBase} onSuccess={()=>setScreen('create')} notify={notify} />;
-  if (screen === 'create') return <CreateAccountView apiBase={apiBase} onCreated={(acct)=>{ setAccount(acct); notify('🏦','Account created', `#${acct.account_number} · status ${acct.status}`); setScreen('fund'); }} onUseExisting={()=>setScreen('existing')} />;
+  const [prefillEmail, setPrefillEmail] = useState('');
+
+  if (screen === 'login') return (
+    <LoginView
+      apiBase={apiBase} setApiBase={setApiBase} notify={notify}
+      onLoggedIn={(acct)=>{ setAccount(acct); setScreen('dashboard'); }}
+      onNeedsAccount={(email)=>{ setPrefillEmail(email); setScreen('create'); }}
+    />
+  );
+  if (screen === 'create') return (
+    <CreateAccountView
+      apiBase={apiBase} initialEmail={prefillEmail}
+      onCreated={(acct)=>{ setAccount(acct); notify('🏦','Account created', `#${acct.account_number} · status ${acct.status}`); setScreen('fund'); }}
+      onUseExisting={()=>setScreen('existing')}
+    />
+  );
   if (screen === 'existing') return <UseExistingView apiBase={apiBase} onLoaded={(acct)=>{ setAccount(acct); notify('✅','Loaded existing account', `#${acct.account_number} · status ${acct.status}`); setScreen('dashboard'); }} onBack={()=>setScreen('create')} />;
   if (screen === 'fund') return <FundView apiBase={apiBase} accountId={account.id} onDone={()=>setScreen('dashboard')} notify={notify} />;
 
@@ -78,24 +92,30 @@ export default function App(){
   );
 }
 
-function LoginView({ apiBase, setApiBase, onSuccess, notify }){
+function LoginView({ apiBase, setApiBase, notify, onLoggedIn, onNeedsAccount }){
   const [email, setEmail] = useState('jane@example.com');
   const [password, setPassword] = useState('demo1234');
   const [base, setBase] = useState(apiBase);
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const doLogin = async () => {
-    setErr('');
-    try {
-      const res = await fetch(`${base}/health`);
-      if (!res.ok) throw new Error();
-    } catch {
-      setErr(`Can't reach backend at ${base}. Is the Express proxy running?`);
-      return;
-    }
+    setErr(''); setBusy(true);
     setApiBase(base);
-    notify('✅','Logged in', email);
-    onSuccess();
+    try {
+      const result = await api(base, '/api/auth/login', { method:'POST', body:{ email, password } });
+      const acct = await api(base, `/api/accounts/${result.account_id}`);
+      notify('✅','Logged in', email);
+      onLoggedIn({ id:acct.id, account_number:acct.account_number, status:acct.status, cash:0, given_name:acct.identity?.given_name||'', family_name:acct.identity?.family_name||'' });
+    } catch (e) {
+      if (e.message.includes('No account found')) {
+        setErr("No account found for this email — let's create one.");
+        onNeedsAccount(email);
+      } else {
+        setErr(e.message);
+      }
+    }
+    setBusy(false);
   };
 
   return (
@@ -110,22 +130,24 @@ function LoginView({ apiBase, setApiBase, onSuccess, notify }){
         <input type="email" value={email} onChange={e=>setEmail(e.target.value)} />
         <label>Password</label>
         <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        <button className="btn-primary" onClick={doLogin}>Log In</button>
+        <button className="btn-primary" disabled={busy} onClick={doLogin}>{busy ? 'Logging in…' : 'Log In'}</button>
         {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
       </div>
     </div>
   );
 }
 
-function CreateAccountView({ apiBase, onCreated, onUseExisting }){
+function CreateAccountView({ apiBase, onCreated, onUseExisting, initialEmail }){
   const [given, setGiven] = useState('John');
   const [family, setFamily] = useState('Doe');
-  const [email, setEmail] = useState('jane@example.com');
+  const [email, setEmail] = useState(initialEmail || 'jane@example.com');
+  const [password, setPassword] = useState('');
   const [dob, setDob] = useState('1990-01-01');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   const submit = async () => {
+    if (!password) { setErr('Choose a password.'); return; }
     setBusy(true); setErr('');
     const payload = {
       contact:{ email_address:email, phone_number:'555-666-7788', street_address:['20 N San Mateo Dr'], city:'San Mateo', state:'CA', postal_code:'94401', country:'USA' },
@@ -139,6 +161,7 @@ function CreateAccountView({ apiBase, onCreated, onUseExisting }){
     };
     try {
       const account = await api(apiBase, '/api/accounts', { method:'POST', body:payload });
+      await api(apiBase, '/api/auth/signup', { method:'POST', body:{ email, password, account_id:account.id } });
       onCreated({ id:account.id, account_number:account.account_number, status:account.status, cash:0, given_name:given, family_name:family });
     } catch (e) { setErr(e.message); }
     setBusy(false);
@@ -155,6 +178,7 @@ function CreateAccountView({ apiBase, onCreated, onUseExisting }){
           <div><label>Family Name</label><input value={family} onChange={e=>setFamily(e.target.value)} /></div>
         </div>
         <label>Email Address</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} />
+        <label>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Choose a password" />
         <label>Date of Birth</label><input type="date" value={dob} onChange={e=>setDob(e.target.value)} />
         <button className="btn-primary" disabled={busy} onClick={submit}>{busy ? 'Submitting…' : 'Submit Application'}</button>
         {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
@@ -297,12 +321,13 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
   const placeOrder = async () => {
     if (!symbol || qty<=0) return;
     setSubmitting(true);
-    const shares = unit==='dollars' ? +(qty/px).toFixed(4) : qty;
-    const body = { symbol: symbol.toUpperCase(), qty:String(shares), side, type, time_in_force: tif.toLowerCase() };
+    const body = { symbol: symbol.toUpperCase(), side, type, time_in_force: tif.toLowerCase() };
+    if (unit==='dollars') { body.notional = String(qty); } else { body.qty = String(qty); }
     if (type==='limit') body.limit_price = String(limitPrice);
     try {
       const order = await api(apiBase, `/api/accounts/${account.id}/orders`, { method:'POST', body });
-      notify(side==='buy'?'🟢':'🔴', `Order ${order.status}: ${side.toUpperCase()} ${shares} ${symbol}`, `type ${type} · id ${order.id}`);
+      const qtyLabel = unit==='dollars' ? `$${qty}` : `${qty} shares`;
+      notify(side==='buy'?'🟢':'🔴', `Order ${order.status}: ${side.toUpperCase()} ${qtyLabel} ${symbol}`, `type ${type} · id ${order.id}`);
       setQty(0);
       await refreshFromBackend();
       setSub('history');

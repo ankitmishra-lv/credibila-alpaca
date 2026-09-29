@@ -16,6 +16,18 @@ router.post('/', async (req, res) => {
     });
     res.status(201).json(journal);
   } catch (err) {
+    console.error(err.message, err.details || '');
+    res.status(err.status || 500).json({ error: err.message, details: err.details });
+  }
+});
+
+// GET /api/journals/:id — check a journal's status (pending/executed/rejected)
+router.get('/:id', async (req, res) => {
+  try {
+    const journal = await alpacaFetch(`/v1/journals/${req.params.id}`);
+    res.json(journal);
+  } catch (err) {
+    console.error(err.message, err.details || '');
     res.status(err.status || 500).json({ error: err.message, details: err.details });
   }
 });

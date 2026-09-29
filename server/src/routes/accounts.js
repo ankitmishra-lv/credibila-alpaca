@@ -14,7 +14,25 @@ router.post('/', async (req, res) => {
     });
     res.status(201).json(account);
   } catch (err) {
-    console.log(err)
+    console.error('POST /api/accounts failed:', err.message, err.details || '');
+    res.status(err.status || 500).json({ error: err.message, details: err.details });
+  }
+});
+
+// GET /api/accounts — list accounts in your sandbox (id, account_number, status, name)
+router.get('/', async (_req, res) => {
+  try {
+    const accounts = await alpacaFetch('/v1/accounts');
+    res.json((accounts || []).map(a => ({
+      id: a.id,
+      account_number: a.account_number,
+      status: a.status,
+      name: `${a.identity?.given_name || ''} ${a.identity?.family_name || ''}`.trim(),
+      email: a.contact?.email_address,
+      created_at: a.created_at,
+    })));
+  } catch (err) {
+    console.error('GET /api/accounts failed:', err.message, err.details || '');
     res.status(err.status || 500).json({ error: err.message, details: err.details });
   }
 });
