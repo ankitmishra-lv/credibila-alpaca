@@ -64,7 +64,7 @@ export default function App(){
 
   if (screen === 'login') return (
     <LoginView
-      apiBase={apiBase} setApiBase={setApiBase} notify={notify}
+      apiBase={apiBase} notify={notify}
       onLoggedIn={(acct)=>{ setAccount(acct); setScreen('dashboard'); }}
       onNeedsAccount={(email)=>{ setPrefillEmail(email); setScreen('create'); }}
     />
@@ -76,7 +76,7 @@ export default function App(){
       onUseExisting={()=>setScreen('existing')}
     />
   );
-  if (screen === 'existing') return <UseExistingView apiBase={apiBase} onLoaded={(acct)=>{ setAccount(acct); notify('✅','Loaded existing account', `#${acct.account_number} · status ${acct.status}`); setScreen('dashboard'); }} onBack={()=>setScreen('create')} />;
+  if (screen === 'existing') return <UseExistingView apiBase={apiBase} notify={notify} onLoaded={(acct)=>{ setAccount(acct); notify('✅','Loaded existing account', `#${acct.account_number} · status ${acct.status}`); setScreen('dashboard'); }} onBack={()=>setScreen('create')} />;
   if (screen === 'fund') return <FundView apiBase={apiBase} accountId={account.id} onDone={()=>setScreen('dashboard')} notify={notify} />;
 
   return (
@@ -92,19 +92,17 @@ export default function App(){
   );
 }
 
-function LoginView({ apiBase, setApiBase, notify, onLoggedIn, onNeedsAccount }){
+function LoginView({ apiBase, notify, onLoggedIn, onNeedsAccount }){
   const [email, setEmail] = useState('jane@example.com');
   const [password, setPassword] = useState('demo1234');
-  const [base, setBase] = useState(apiBase);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
   const doLogin = async () => {
     setErr(''); setBusy(true);
-    setApiBase(base);
     try {
-      const result = await api(base, '/api/auth/login', { method:'POST', body:{ email, password } });
-      const acct = await api(base, `/api/accounts/${result.account_id}`);
+      const result = await api(apiBase, '/api/auth/login', { method:'POST', body:{ email, password } });
+      const acct = await api(apiBase, `/api/accounts/${result.account_id}`);
       notify('✅','Logged in', email);
       onLoggedIn({ id:acct.id, account_number:acct.account_number, status:acct.status, cash:0, given_name:acct.identity?.given_name||'', family_name:acct.identity?.family_name||'' });
     } catch (e) {
@@ -123,9 +121,7 @@ function LoginView({ apiBase, setApiBase, notify, onLoggedIn, onNeedsAccount }){
       <div className="brand"><span className="dot"></span>Broker Demo</div>
       <div className="card">
         <h1>Log In</h1>
-        <p className="sub">React frontend talking to your real Express proxy + Alpaca sandbox.</p>
-        <label>Backend URL</label>
-        <input value={base} onChange={e=>setBase(e.target.value)} />
+        <p className="sub">React frontend talking to your Express proxy + Alpaca sandbox.</p>
         <label>Email</label>
         <input type="email" value={email} onChange={e=>setEmail(e.target.value)} />
         <label>Password</label>
@@ -142,12 +138,24 @@ function CreateAccountView({ apiBase, onCreated, onUseExisting, initialEmail }){
   const [family, setFamily] = useState('Doe');
   const [email, setEmail] = useState(initialEmail || 'jane@example.com');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [dob, setDob] = useState('1990-01-01');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
+  const validatePassword = (pw) => {
+    if (pw.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
+    if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
+    return null;
+  };
+
   const submit = async () => {
     if (!password) { setErr('Choose a password.'); return; }
+    if (password !== confirmPassword) { setErr('Passwords do not match.'); return; }
+    const pwErr = validatePassword(password);
+    if (pwErr) { setErr(pwErr); return; }
     setBusy(true); setErr('');
     const payload = {
       contact:{ email_address:email, phone_number:'555-666-7788', street_address:['20 N San Mateo Dr'], city:'San Mateo', state:'CA', postal_code:'94401', country:'USA' },
@@ -178,7 +186,10 @@ function CreateAccountView({ apiBase, onCreated, onUseExisting, initialEmail }){
           <div><label>Family Name</label><input value={family} onChange={e=>setFamily(e.target.value)} /></div>
         </div>
         <label>Email Address</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <label>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Choose a password" />
+        <div className="row2">
+          <div><label>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Min 8 chars, 1 upper, 1 lower, 1 number" /></div>
+          <div><label>Confirm Password</label><input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Re-type password" /></div>
+        </div>
         <label>Date of Birth</label><input type="date" value={dob} onChange={e=>setDob(e.target.value)} />
         <button className="btn-primary" disabled={busy} onClick={submit}>{busy ? 'Submitting…' : 'Submit Application'}</button>
         {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
@@ -188,16 +199,46 @@ function CreateAccountView({ apiBase, onCreated, onUseExisting, initialEmail }){
   );
 }
 
-function UseExistingView({ apiBase, onLoaded, onBack }){
+function UseExistingView({ apiBase, onLoaded, onBack, notify }){
   const [id, setId] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
+  const validatePassword = (pw) => {
+    if (pw.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
+    if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
+    return null;
+  };
+
   const submit = async () => {
     if (!id.trim()) { setErr('Enter an account ID.'); return; }
+    if (email && password) {
+      if (password !== confirmPassword) { setErr('Passwords do not match.'); return; }
+      const pwErr = validatePassword(password);
+      if (pwErr) { setErr(pwErr); return; }
+    }
     setBusy(true); setErr('');
     try {
       const acct = await api(apiBase, `/api/accounts/${id.trim()}`);
+      if (email && password) {
+        try {
+          await api(apiBase, '/api/auth/signup', { method:'POST', body:{ email, password, account_id:acct.id } });
+          notify('🔐', 'Login credentials set', `Email ${email} linked to account #${acct.account_number}`);
+        } catch (e) {
+          if (e.message.includes('already exists')) {
+            setErr(`Email already linked to another account. ${e.message}`);
+          } else {
+            setErr(`Failed to set login credentials: ${e.message}`);
+          }
+          setBusy(false);
+          return;
+        }
+      }
       onLoaded({ id:acct.id, account_number:acct.account_number, status:acct.status, cash:0, given_name:acct.identity?.given_name||'', family_name:acct.identity?.family_name||'' });
     } catch (e) { setErr(e.message); }
     setBusy(false);
@@ -208,9 +249,19 @@ function UseExistingView({ apiBase, onLoaded, onBack }){
       <div className="brand"><span className="dot"></span>Broker Demo</div>
       <div className="card">
         <h1>Use Existing Account</h1>
-        <p className="sub">Skip creation and jump straight to the dashboard for an account you already made.</p>
+        <p className="sub">Enter an Alpaca account ID to load. Optionally set up email/password login below.</p>
         <label>Account ID</label>
         <input value={id} onChange={e=>setId(e.target.value)} placeholder="e.g. 8f8c8cee-2591-4f83-..." />
+        <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Login Credentials (optional)</div>
+          <label>Email Address</label>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" />
+          <div className="row2">
+            <div><label>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Min 8 chars" /></div>
+            <div><label>Confirm Password</label><input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Re-type password" /></div>
+          </div>
+          <div className="sub" style={{color:'var(--muted)', fontSize:12}}>Set these so you can log in with email/password later instead of entering the ID each time.</div>
+        </div>
         <button className="btn-primary" disabled={busy} onClick={submit}>{busy ? 'Loading…' : 'Load Account'}</button>
         {err && <div className="sub" style={{color:'#ef4444', marginTop:10}}>{err}</div>}
         <div className="link" onClick={onBack}>← Back</div>
