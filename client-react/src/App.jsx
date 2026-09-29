@@ -51,7 +51,7 @@ export default function App(){
       (pos||[]).forEach(p => { posMap[p.symbol] = { qty: parseFloat(p.qty), avg: parseFloat(p.avg_entry_price) }; });
       setPositions(posMap);
       setOrders((ord||[]).map(o => ({
-        symbol:o.symbol, side:o.side, qty:o.qty, type:o.type,
+        orderId:o.id, symbol:o.symbol, side:o.side, qty:o.qty, type:o.type,
         filled_avg_price: o.filled_avg_price ? parseFloat(o.filled_avg_price) : 0,
         status:o.status, time:new Date(o.submitted_at||Date.now()).toLocaleTimeString(),
       })));
@@ -347,6 +347,14 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
     } catch (e) { notify('⚠️','Close failed', e.message); }
   };
 
+  const cancelOrder = async (orderId) => {
+    try {
+      await api(apiBase, `/api/accounts/${account.id}/orders/${orderId}`, { method:'DELETE' });
+      notify('✖️','Order canceled', orderId);
+      await refreshFromBackend();
+    } catch (e) { notify('⚠️','Cancel failed', e.message); }
+  };
+
   const addSymbolToWatchlist = () => {
     const s = addSym.trim().toUpperCase();
     if (!s) return;
@@ -445,9 +453,9 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
             )}
             {sub==='open' && (
               <div className="overflow">
-                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Type</th><th>Status</th></tr></thead>
+                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Type</th><th>Status</th><th></th></tr></thead>
                 <tbody>{openOrders.map((o,i)=>(
-                  <tr key={i}><td>{o.symbol}</td><td className={o.side==='buy'?'up':'down'}>{o.side.toUpperCase()}</td><td>{o.qty}</td><td>{o.type}</td><td><span className="tag">{o.status}</span></td></tr>
+                  <tr key={i}><td>{o.symbol}</td><td className={o.side==='buy'?'up':'down'}>{o.side.toUpperCase()}</td><td>{o.qty}</td><td>{o.type}</td><td><span className="tag">{o.status}</span></td><td><button className="closebtn" onClick={()=>cancelOrder(o.orderId)}>Cancel</button></td></tr>
                 ))}</tbody></table>
                 {openOrders.length===0 && <div className="empty">No open orders.</div>}
               </div>

@@ -31,6 +31,7 @@ Server runs on `http://localhost:4000` by default.
 | POST | `/api/accounts/:id/orders` | `POST /v1/trading/accounts/:id/orders` — place an order |
 | GET | `/api/accounts/:id/orders` | `GET /v1/trading/accounts/:id/orders` — order history |
 | DELETE | `/api/accounts/:id/orders/:orderId` | cancel an open order |
+| GET | `/api/accounts/:id/orders/:orderId` | `GET /v1/trading/accounts/:id/orders/:orderId` — fetch a single order (trade confirmation) |
 | GET | `/api/accounts/:id/positions` | `GET /v1/trading/accounts/:id/positions` — open positions |
 | POST | `/api/journals` | `POST /v1/journals` — fund an account |
 

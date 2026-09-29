@@ -28,6 +28,16 @@ router.get('/:id/orders', async (req, res) => {
   }
 });
 
+// GET /api/accounts/:id/orders/:orderId — fetch a single order by ID (trade confirmation)
+router.get('/:id/orders/:orderId', async (req, res) => {
+  try {
+    const order = await alpacaFetch(`/v1/trading/accounts/${req.params.id}/orders/${req.params.orderId}`);
+    res.json(order);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message, details: err.details });
+  }
+});
+
 // DELETE /api/accounts/:id/orders/:orderId — cancel an open order
 router.delete('/:id/orders/:orderId', async (req, res) => {
   try {
