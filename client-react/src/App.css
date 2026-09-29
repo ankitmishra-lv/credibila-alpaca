@@ -21,6 +21,10 @@ button{cursor:pointer;border:none;border-radius:9px;padding:11px 16px;font-size:
 .btn-primary{background:var(--accent);color:#fff;width:100%;margin-top:16px;}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;margin-bottom:22px;}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:#fcd72b;}
+/* ---- home page tabs ---- */
+.tabs{display:flex;background:var(--chip);border-radius:9px;padding:3px;margin-bottom:16px;}
+.tab{flex:1;text-align:center;padding:9px 12px;border-radius:7px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tab.active{background:var(--accent);color:#fff;}
 /* ---- dashboard ---- */
 #dash{display:none;flex-direction:column;height:100%;}
 #dash.active{display:flex;}
