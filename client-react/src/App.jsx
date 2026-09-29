@@ -62,6 +62,11 @@ export default function App(){
   useEffect(() => { if (screen==='dashboard') refreshFromBackend(); }, [screen]); // eslint-disable-line
 
   useEffect(() => {
+    setNotifications([]);
+    prevOrdersRef.current = {};
+  }, [account?.id]);
+
+  useEffect(() => {
     if (!orders.length) return;
     orders.forEach(o => {
       const prev = prevOrdersRef.current[o.orderId];
