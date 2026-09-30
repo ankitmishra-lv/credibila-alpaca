@@ -492,7 +492,7 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
             )}
             {sub==='history' && (
               <div className="overflow">
-                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Fill Px</th><th>Status</th><th>Time</th></tr></thead>
+                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Avg Fill Price</th><th>Status</th><th>Time</th></tr></thead>
                 <tbody>{orders.map((o,i)=>(
                   <tr key={i}><td>{o.symbol}</td><td className={o.side==='buy'?'up':'down'}>{o.side.toUpperCase()}</td><td>{o.qty}</td><td>{fmt(o.filled_avg_price)}</td><td><span className="tag">{o.status}</span></td><td>{o.time}</td></tr>
                 ))}</tbody></table>
