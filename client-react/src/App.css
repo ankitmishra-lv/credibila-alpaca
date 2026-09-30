@@ -89,3 +89,8 @@ tr:last-child td{border-bottom:none;}
 .bell{position:relative;background:var(--chip);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:14px;}
 .badge{position:absolute;top:-6px;right:-6px;background:var(--down);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;min-width:14px;text-align:center;}
 .logout{color:var(--muted);font-size:11px;cursor:pointer;}
+/* ---- tooltips ---- */
+.tooltip{position:relative;display:inline-block;cursor:help;padding-right:2px;}
+.tooltip .qm{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--muted);color:var(--panel2);font-size:9px;font-weight:700;line-height:14px;text-align:center;margin-left:2px;vertical-align:middle;}
+.tooltip .tooltiptext{visibility:hidden;opacity:0;transition:opacity .15s;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:10;width:max-content;max-width:200px;}
+.tooltip:hover .tooltiptext{visibility:visible;opacity:1;}

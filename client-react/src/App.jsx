@@ -465,7 +465,14 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
 
             {sub==='positions' && (
               <div className="overflow">
-                <table><thead><tr><th>Symbol</th><th>Qty</th><th>Avg Cost</th><th>Price</th><th>Mkt Value</th><th>P/L</th><th></th></tr></thead>
+                <table><thead><tr>
+                  <th><span className="tooltip">Symbol<span className="tooltiptext">Trading symbol of the security</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Qty<span className="tooltiptext">Number of shares held</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Avg Cost<span className="tooltiptext">Average purchase price per share (cost basis)</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Price<span className="tooltiptext">Current market price per share</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Mkt Value<span className="tooltiptext">Total market value (qty × price)</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">P/L<span className="tooltiptext">Unrealized profit/loss vs cost basis</span><span className="qm">?</span></span></th>
+                  <th></th></tr></thead>
                 <tbody>
                   {posEntries.map(([sym,p])=>{
                     const mkt = price(sym), mv = p.qty*mkt, pl = (mkt-p.avg)*p.qty, plPct=((mkt-p.avg)/p.avg)*100;
@@ -483,7 +490,13 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
             )}
             {sub==='open' && (
               <div className="overflow">
-                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Type</th><th>Status</th><th></th></tr></thead>
+                <table><thead><tr>
+                  <th><span className="tooltip">Symbol<span className="tooltiptext">Trading symbol of the security</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Side<span className="tooltiptext">Buy or sell direction</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Qty<span className="tooltiptext">Number of shares to trade</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Type<span className="tooltiptext">Order type (market, limit, etc.)</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Status<span className="tooltiptext">Current order lifecycle status</span><span className="qm">?</span></span></th>
+                  <th></th></tr></thead>
                 <tbody>{openOrders.map((o,i)=>(
                   <tr key={i}><td>{o.symbol}</td><td className={o.side==='buy'?'up':'down'}>{o.side.toUpperCase()}</td><td>{o.qty}</td><td>{o.type}</td><td><span className="tag">{o.status}</span></td><td><button className="closebtn" onClick={()=>cancelOrder(o.orderId)}>Cancel</button></td></tr>
                 ))}</tbody></table>
@@ -492,7 +505,13 @@ function Dashboard({ apiBase, account, notifications, notify, positions, orders,
             )}
             {sub==='history' && (
               <div className="overflow">
-                <table><thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Avg Fill Price</th><th>Status</th><th>Time</th></tr></thead>
+                <table><thead><tr>
+                  <th><span className="tooltip">Symbol<span className="tooltiptext">Trading symbol of the security</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Side<span className="tooltiptext">Buy or sell direction</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Qty<span className="tooltiptext">Number of shares in the order</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Avg Fill Price<span className="tooltiptext">Weighted average execution price</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Status<span className="tooltiptext">Final order status (filled, canceled, expired)</span><span className="qm">?</span></span></th>
+                  <th><span className="tooltip">Time<span className="tooltiptext">Time the order was submitted</span><span className="qm">?</span></span></th></tr></thead>
                 <tbody>{orders.map((o,i)=>(
                   <tr key={i}><td>{o.symbol}</td><td className={o.side==='buy'?'up':'down'}>{o.side.toUpperCase()}</td><td>{o.qty}</td><td>{fmt(o.filled_avg_price)}</td><td><span className="tag">{o.status}</span></td><td>{o.time}</td></tr>
                 ))}</tbody></table>
