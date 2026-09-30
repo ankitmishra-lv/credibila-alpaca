@@ -68,7 +68,7 @@ td{padding:9px 4px;border-bottom:1px solid var(--border);}
 tr:last-child td{border-bottom:none;}
 .linklike{color:var(--accent);font-weight:700;}
 .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
-.overflow{overflow-x:auto;}
+.overflow{overflow-x:auto;overflow-y:visible;}
 .tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:var(--chip);}
 .closebtn{background:var(--chip);color:var(--text);padding:6px 10px;font-size:11px;}
 /* order ticket */
@@ -92,5 +92,5 @@ tr:last-child td{border-bottom:none;}
 /* ---- tooltips ---- */
 .tooltip{position:relative;display:inline-block;cursor:help;padding-right:2px;}
 .tooltip .qm{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--muted);color:var(--panel2);font-size:9px;font-weight:700;line-height:14px;text-align:center;margin-left:2px;vertical-align:middle;}
-.tooltip .tooltiptext{visibility:hidden;opacity:0;transition:opacity .15s;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:10;width:max-content;max-width:200px;}
+.tooltip .tooltiptext{visibility:hidden;opacity:0;transition:opacity .15s;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:9999;}
 .tooltip:hover .tooltiptext{visibility:visible;opacity:1;}
