@@ -10,14 +10,26 @@ async function testSell(baseUrl, accountId, config, buyResult) {
   }
 
   const { symbol } = config;
-  const posQty = parseFloat(buyResult.order.filled_qty) || parseFloat(buyResult.order.qty);
+  let filledQty = parseFloat(buyResult.order.filled_qty);
 
-  if (posQty <= 0) {
-    warn('Buy order did not fill any shares; cannot sell.');
-    return { ok: false, order: null, reason: 'buy did not fill' };
+  if (filledQty <= 0) {
+    warn(`Buy order not yet filled. Waiting for fill before selling to avoid wash trade...`);
+    const { waitForStatus } = require('./confirm');
+    const orderId = buyResult.order.orderId || buyResult.order.id;
+    const filled = await waitForStatus(baseUrl, accountId, orderId, ['filled', 'partially_filled'], 6, 2000);
+    if (!filled) {
+      warn('Buy order did not fill within wait window; skipping sell.');
+      return { ok: false, order: null, reason: 'buy not filled' };
+    }
+    filledQty = parseFloat(filled.filled_qty);
   }
 
-  step(`Placing market sell order: ${posQty} shares of ${symbol}`);
+  if (filledQty <= 0) {
+    warn('Buy order filled but filled_qty is 0; cannot sell.');
+    return { ok: false, order: null, reason: 'no shares to sell' };
+  }
+
+  step(`Placing market sell order: ${filledQty} shares of ${symbol}`);
 
   let order;
   try {
@@ -25,7 +37,7 @@ async function testSell(baseUrl, accountId, config, buyResult) {
       method: 'POST',
       body: {
         symbol,
-        qty: String(posQty),
+        qty: String(filledQty),
         side: 'sell',
         type: 'market',
         time_in_force: 'day',

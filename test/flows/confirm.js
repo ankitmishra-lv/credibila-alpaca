@@ -46,7 +46,7 @@ async function testConfirmation(baseUrl, accountId, context) {
       accountId,
       orderId,
       ['filled', 'partially_filled', 'canceled'],
-      8,
+    12,
       1500
     );
 

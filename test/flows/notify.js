@@ -41,7 +41,7 @@ async function testNotifications(baseUrl, accountId, context) {
     data(`${label} order initial status`, { orderId, status: initialStatus });
     step(`Polling for status change on ${label} order ${orderId}...`);
 
-    const result2 = await pollOrderStatus(baseUrl, accountId, orderId, [initialStatus], 4, 2000);
+    const result2 = await pollOrderStatus(baseUrl, accountId, orderId, [initialStatus], 8, 2000);
 
     if (result2?.transition) {
       const note = {
